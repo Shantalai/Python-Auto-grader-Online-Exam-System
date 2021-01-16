@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" >
+    <title>Exam List Instructor</title>
+</head>
+<body onload="listExamsInstructor()";>
+    <div class="somebox_half"></div>
+    <div class="navBar">
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/instructor.html">Home</a></div>
+        <div style="float: left;"><h3>List of created exams</h3></div>
+        <div style="float: right; margin-right: 20px;"><a href="https://web.njit.edu/~ak983/login.html">Log out</a></div>
+    </div>
+    <ul id="examList" class="menu"></ul>
+</body>
+<script>
+    function listExamsInstructor(){
+
+        var action = {'action': 'listExams'};
+
+        var i;
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success exam list"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of exam list");
+            console.log(response_json);
+
+            var ul = document.getElementById("examList");
+
+            for(i=0; i<response_json.length; i++){
+           
+            var li = document.createElement("li");
+            
+            var span = document.createElement("span");
+            var h3 = document.createElement("h3");
+            var text = document.createTextNode("Exam "+response_json[i].examName+" ");
+           // h3.appendChild(text);
+           // h3.setAttribute("name",response_json[i].examName);
+           // h3.setAttribute("onclick","gradeThisExam(this.name);");
+           
+            if(response_json[i].completed == 'yes'){
+                var a = document.createElement("a");
+                span.setAttribute("style","color: teal;")
+                span.appendChild(document.createTextNode("Ready for grading"));
+                a.appendChild(document.createTextNode("Exam "+response_json[i].examName));
+                a.setAttribute("name",response_json[i].examName);
+                a.setAttribute("onclick","gradeThisExam(this.name);");
+                h3.appendChild(a);
+                
+            }else{
+                span.setAttribute("style","color: brown;");
+                span.appendChild(document.createTextNode("Not taken"));
+                h3.appendChild(text);
+            
+            }
+            li.appendChild(h3);
+            li.appendChild(span);
+            ul.appendChild(li);
+           
+            } 
+            
+        }
+    };
+        xhr.send(JSON.stringify(action));
+        
+    }
+
+    function gradeThisExam(clicked){
+        window.localStorage.setItem('gradeExam', clicked);
+
+       window.location.pathname = '/~ak983/autoGrade.html';
+       //window.location.pathname = '/autoGrade.html';
+      
+    }
+
+   
+   
+</script>
+</html>
