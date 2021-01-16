@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" >
+    <title>Review/grade exam here</title>
+</head>
+<body onload="pullExam();">
+    <div class="somebox_right"></div>
+    <div class="somebox_left"></div>
+    <div class="navBar">
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/instructor.html">Home</a></div>
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/examListInstructor.html">Exam List</a></div>
+        <div style="float: left;"><h3 id="pulledExam">Exam</h3></div>
+        <div style="float: right; margin-right: 20px;"><a href="https://web.njit.edu/~ak983/login.html">Log out</a></div>
+</div> 
+<form id="toGradeForm" method="POST" onsubmit="event.preventDefault();">
+
+<table id="toGradeTable" >
+  <!--  <tr>
+       <td>
+           <h4 id="autoQT">Text of the question Text of the question Text of the question Text of the question Text of the question</h4>
+           <h3 id="autoP">Points / Total</h3>
+        <table>
+            <tr>
+                <th>Grade item</th>
+                <th>Student input</th>
+                <th>Check</th>
+                <th>Points off</th>
+            </tr>
+            <tr>
+                <td>Function name</td>
+                <td>DoubleIt</td>
+                <td>Fail</td>
+                <td>-5</td>
+            </tr>
+            <tr>
+                <td>Test case 1 DoubleIt(4)->5</td>
+                <td>10</td>
+                <td>Fail</td>
+                <td>-4</td>
+            </tr>
+        </table> 
+        <table>
+            <th>Teachers comment:</th>
+            <th>Good job, but python does not use semicolon.</th>
+        </table>  
+        <div>
+            <input style="float: left; width: 30%; margin-right: 10px;" placeholder="Change grade here">
+            <input style="float: left; width: 60%;" placeholder="Enter comment"> 
+        </div>
+    </td> 
+    </tr> -->
+</table>
+
+<h3 id="totalGrade">Final grade: X</h3>
+<a id="grSubmit"></a>
+<button type="submit" id="gradeFinal" onclick="submitFinalGrade();">Submit Final Grade</button>
+<span></span>
+
+</form>
+</body>
+<script>
+    var flagFn = false;
+    var flagTc = false;
+    var flagCo = false;
+    var failFlagCn = false;
+
+    var gradeName = localStorage.getItem('gradeExam');
+    var comments = [];
+    var totalGrade =0; 
+    
+    function pullExam(){
+       
+        var pullexam = {'action': 'pullExam',
+                        'examName': gradeName
+                        };
+
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success pull exam"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of pull exam");    //------------------ inside response  
+            console.log(response_json);
+            //console.log(response_json.questions.length);
+
+            document.getElementById("pulledExam").innerHTML = "Exam "+gradeName;
+            totalGrade = Number(response_json.autoGrade); 
+            document.getElementById("totalGrade").innerHTML = "Final grade: "+response_json.autoGrade;
+
+            function makePass(){
+                var pass = document.createElement("h4");
+                pass.style.color = "green";
+                pass.appendChild(document.createTextNode("PASS"));
+
+                return pass;
+            }
+
+            function makeFail(){
+                var fail = document.createElement("h4");
+                fail.style.color = "red";
+                fail.appendChild(document.createTextNode("FAIL"));
+
+                return fail;
+            }
+            
+    
+           var maintable = document.getElementById("toGradeTable");
+           for(var i =0; i<response_json.questions.length; i++) { 
+            // inner table header ------------------------//
+            var outtr = document.createElement("tr");
+            var outtd = document.createElement("td");
+            var qText = document.createElement("h4");
+            qText.appendChild(document.createTextNode("Write a function named "+response_json.questions[i].funcName+" that takes the following arguments "+response_json.questions[i].funcArgs+" performs the following operations "+response_json.questions[i].funcOper+"."));
+            var points = document.createElement("h3");
+            points.setAttribute("id", "x"+response_json.questions[i].qID);
+            points.appendChild(document.createTextNode("Points: "+response_json.questions[i].qGrade+"/"+response_json.questions[i].qPoints));
+
+            var table = document.createElement("table");
+           
+
+            var tr1 = document.createElement("tr");
+            var th1 = document.createElement("th");
+            var th2 = document.createElement("th");
+            var th3 = document.createElement("th");
+            var th4 = document.createElement("th");
+            var th5 = document.createElement("th");
+            
+            th1.setAttribute("style","border: 1px solid black;");
+            th2.setAttribute("style","border: 1px solid black;");
+            th3.setAttribute("style","border: 1px solid black;");
+            th4.setAttribute("style","border: 1px solid black;");
+            th5.setAttribute("style","border: 1px solid black;");
+           
+            th1.appendChild(document.createTextNode("Grade Item"));
+            th2.appendChild(document.createTextNode("Student output"));
+            th3.appendChild(document.createTextNode("Check"));
+            th4.appendChild(document.createTextNode("Points off"));
+            th5.appendChild(document.createTextNode("Change points"));
+           
+            tr1.appendChild(th1);
+            tr1.appendChild(th2);
+            tr1.appendChild(th3);
+            tr1.appendChild(th4);
+            tr1.appendChild(th5);
+            // --------------------------------------------------//
+            table.appendChild(tr1);
+            //function name dispalay------------------------///
+            flagFn = true;
+            var trFuncName = document.createElement("tr");
+            var tdFN1 = document.createElement("td");
+            var tdFN2 = document.createElement("td");
+            var tdFN3 = document.createElement("td");
+            var tdFN4 = document.createElement("td");
+            var tdFN5 = document.createElement("td");
+
+            var inpName = document.createElement("input");
+            inpName.setAttribute("id","fn"+response_json.questions[i].qID);
+            inpName.setAttribute("name",response_json.questions[i].qGrade);
+            inpName.setAttribute("style", "width: 100px");
+            inpName.setAttribute("type", "text");
+            inpName.setAttribute("onchange","changeGrade(this.id, this.name, flagFn);");
+
+            tdFN1.setAttribute("style","border: 1px solid black;");
+            tdFN2.setAttribute("style","border: 1px solid black;");
+            tdFN3.setAttribute("style","border: 1px solid black;");
+            tdFN4.setAttribute("style","border: 1px solid black;");
+            tdFN5.setAttribute("style","border: 1px solid black;");
+            if(response_json.questions[i].nameFlag == "yes"){
+                tdFN1.appendChild(document.createTextNode("Wrong function name used"));
+                tdFN2.appendChild(document.createTextNode(response_json.questions[i].wrongFuncName));
+                tdFN3.appendChild(makeFail());
+                tdFN4.appendChild(document.createTextNode("-5"));
+            }else{
+                tdFN1.appendChild(document.createTextNode("Function name is correct"));
+                tdFN2.appendChild(document.createTextNode(response_json.questions[i].funcName));
+                tdFN3.appendChild(makePass());
+                tdFN4.appendChild(document.createTextNode(""));
+            }
+            tdFN5.appendChild(inpName);
+
+            trFuncName.appendChild(tdFN1);
+            trFuncName.appendChild(tdFN2);
+            trFuncName.appendChild(tdFN3);
+            trFuncName.appendChild(tdFN4);
+            trFuncName.appendChild(tdFN5);
+
+           //--------------------------------------------//
+           table.appendChild(trFuncName);
+           // cases dispalay --------------------------------------///
+
+           for( var j =0; j<response_json.questions[i].testcase_flags.length; j++){
+               
+
+                var trCase = document.createElement("tr");
+                var tdCS1 = document.createElement("td");
+                var tdCS2 = document.createElement("td");
+                var tdCS3 = document.createElement("td");
+                var tdCS4 = document.createElement("td");
+                var tdCS5 = document.createElement("td");
+
+                var inpCase = document.createElement("input");
+                inpCase.setAttribute("id","t"+j+response_json.questions[i].qID);
+                inpCase.setAttribute("name",response_json.questions[i].qGrade);
+                inpCase.setAttribute("style", "width: 100px");
+                inpCase.setAttribute("type", "text");
+                
+                
+                tdCS1.setAttribute("style","border: 1px solid black;");
+                tdCS2.setAttribute("style","border: 1px solid black;");
+                tdCS3.setAttribute("style","border: 1px solid black;");
+                tdCS4.setAttribute("style","border: 1px solid black;");
+                tdCS5.setAttribute("style","border: 1px solid black;");
+
+                tdCS1.appendChild(document.createTextNode("Test case "+(j+1)+" "+response_json.questions[i].funcName+"("+response_json.questions[i].testcase_inputs[j]+")->"+response_json.questions[i].testcase_outputs[j]));
+                if(response_json.questions[i].testcase_flags[j]=="yes"){
+                    flagTc =true;
+                    tdCS2.appendChild(document.createTextNode(response_json.questions[i].wrongTestCaseOutputs[j]));
+                    tdCS3.appendChild(makeFail());
+                    tdCS4.appendChild(document.createTextNode("-4"));
+                }else{
+                    tdCS2.appendChild(document.createTextNode(response_json.questions[i].wrongTestCaseOutputs[j]));
+                    tdCS3.appendChild(makePass());
+                    tdCS4.appendChild(document.createTextNode(""));
+                }
+                inpCase.setAttribute("onchange","changeGrade(this.id, this.name, flagTc);");
+                tdCS5.appendChild(inpCase);
+
+                trCase.appendChild(tdCS1);
+                trCase.appendChild(tdCS2);
+                trCase.appendChild(tdCS3);
+                trCase.appendChild(tdCS4);
+                trCase.appendChild(tdCS5);
+
+                table.appendChild(trCase);
+           }
+            // --------------------------------------------------------------------//
+
+            //-- semicolon display -----------------------------------//
+            if(response_json.questions[i].semicolonFlag == "yes"){
+                flagCo = true;
+                var trSemi = document.createElement("tr");
+                var tdSM1 = document.createElement("td");
+                var tdSM2 = document.createElement("td");
+                var tdSM3 = document.createElement("td");
+                var tdSM4 = document.createElement("td");
+                var tdSM5 = document.createElement("td");
+
+                var inpCol = document.createElement("input");
+                inpCol.setAttribute("id","co"+response_json.questions[i].qID);
+                inpCol.setAttribute("name",response_json.questions[i].qGrade);
+                inpCol.setAttribute("style", "width: 100px");
+                inpCol.setAttribute("type", "text");
+                inpCol.setAttribute("onchange","changeGrade(this.id, this.name, flagCo);");
+
+
+                tdSM1.setAttribute("style","border: 1px solid black;");
+                tdSM2.setAttribute("style","border: 1px solid black;");
+                tdSM3.setAttribute("style","border: 1px solid black;");
+                tdSM4.setAttribute("style","border: 1px solid black;");
+                tdSM5.setAttribute("style","border: 1px solid black;");
+
+                tdSM1.appendChild(document.createTextNode('Missing ":"  in your answer'));
+                tdSM2.appendChild(document.createTextNode(""));
+                tdSM3.appendChild(makeFail());
+                tdSM4.appendChild(document.createTextNode("-2"));
+
+                tdSM5.appendChild(inpCol);
+
+                trSemi.appendChild(tdSM1);
+                trSemi.appendChild(tdSM2);
+                trSemi.appendChild(tdSM3);
+                trSemi.appendChild(tdSM4);
+                trSemi.appendChild(tdSM5);
+
+                table.appendChild(trSemi);
+                
+            }
+
+            //--------------------------------------------------------------//
+
+            //---------- constraint dispalay -------------------------------//
+            if(response_json.questions[i].constraintFlag == "yes"){
+                failFlagCn = true;
+
+                var trConst = document.createElement("tr");
+                var tdCT1 = document.createElement("td");
+                var tdCT2 = document.createElement("td");
+                var tdCT3 = document.createElement("td");
+                var tdCT4 = document.createElement("td");
+                var tdCT5 = document.createElement("td");
+
+                var inpCtr = document.createElement("input");
+                inpCase.setAttribute("id","cn"+response_json.questions[i].qID);
+                inpCase.setAttribute("name",response_json.questions[i].qGrade);
+                inpCtr.setAttribute("style", "width: 100px");
+                inpCtr.setAttribute("type", "text");
+                inpCtr.setAttribute("onchange","changeGrade(this.id, this.name, failFlagCn);");
+
+
+                tdCT1.setAttribute("style","border: 1px solid black;");
+                tdCT2.setAttribute("style","border: 1px solid black;");
+                tdCT3.setAttribute("style","border: 1px solid black;");
+                tdCT4.setAttribute("style","border: 1px solid black;");
+                tdCT5.setAttribute("style","border: 1px solid black;");
+
+                tdCT1.appendChild(document.createTextNode("Did not use constraint: "+response_json.questions[i].funcConst));
+                tdCT2.appendChild(document.createTextNode(""));
+                tdCT3.appendChild(makeFail());
+                tdCT4.appendChild(document.createTextNode("-3"));
+
+                tdCT5.appendChild(inpCtr);
+
+                trConst.appendChild(tdCT1);
+                trConst.appendChild(tdCT2);
+                trConst.appendChild(tdCT3);
+                trConst.appendChild(tdCT4);
+                trConst.appendChild(tdCT5);
+
+                table.appendChild(trConst);
+            }
+            //----------------------------------------------------------------//
+
+            //-----------------teacher inputs -----------------------//
+            var inpdiv = document.createElement("div");
+            var inpGrade = document.createElement("input");
+            //var gradeGot = Number(response_json.questions[i].qGrade);
+            inpGrade.setAttribute("id","g"+response_json.questions[i].qID);
+            inpGrade.setAttribute("style", "float: left; width: 30%; margin-right: 10px;");
+            inpGrade.setAttribute("placeholder", "Change grade here");
+            inpGrade.setAttribute("name",response_json.questions[i].qGrade);
+            inpGrade.setAttribute("onchange","adjustTotal(this.id, this.name);"); 
+
+            var inpComm = document.createElement("input");
+            inpComm.setAttribute("id", "c"+response_json.questions[i].qID);
+            inpComm.setAttribute("style", "float: left; width: 60%;");
+            inpComm.setAttribute("placeholder", "Enter comment");
+            inpComm.setAttribute("onchange","addComment(this.id);");
+
+            inpdiv.appendChild(inpGrade);
+            inpdiv.appendChild(inpComm);
+            //----------------------------------------------------------//
+
+            outtd.appendChild(qText);
+            outtd.appendChild(points);
+            outtd.appendChild(table);
+            outtd.appendChild(inpdiv);
+            outtr.appendChild(outtd);
+            maintable.appendChild(outtr);
+
+           }// for every question
+           
+           
+           console.log(totalGrade);
+        }
+    };
+        xhr.send(JSON.stringify(pullexam));
+        console.log("outside of pull exam");
+    }
+
+
+    function changeGrade(inmpid, inmpname, flag){
+
+        var box = inmpid.substring(0,2);
+        var newVal = Number(document.getElementById(inmpid).value);
+        var questionid = inmpid.substring(2);
+
+        var questionGrade = Number(inmpname);
+
+        console.log("check here");
+        console.log(box);
+        console.log(newVal);
+        console.log(questionid);
+        console.log(questionGrade);
+
+        if(box == "fn"){
+            // -5
+            if(flag == true){
+                console.log("yes failed func name");
+                questionGrade = questionGrade + 5 + newVal;
+                totalGrade = totalGrade + 5 + newVal; 
+
+            }else{
+                console.log("no, fname was good");
+                questionGrade = questionGrade + newVal;
+                totalGrade = totalGrade + newVal;
+            }
+            
+        }
+        else if(box == /t[0-3]/){
+            // - 4
+            if(flag == true){
+                console.log("yes failed test case");
+                questionGrade = questionGrade + 4 + newVal;
+                totalGrade = totalGrade + 4 + newVal;
+            }else{
+                console.log("no, test case was good");
+                questionGrade = questionGrade + newVal;
+                totalGrade = totalGrade + newVal;
+            }
+
+        }
+        else if(box == "co"){
+            // -2
+            if(flag == true){
+                console.log("yes failed col");
+                questionGrade = questionGrade + 2 + newVal;
+                totalGrade = totalGrade + 2 + newVal;
+            }else{
+                console.log("no, col was good");
+                questionGrade = questionGrade + newVal;
+                totalGrade = totalGrade + newVal;
+            }
+
+        }
+        else if(box == "cn"){
+            // -3
+            if(flag == true){
+                console.log("yes failed constr");
+                questionGrade = questionGrade + 3 + newVal;
+                totalGrade = totalGrade + 3 + newVal;
+            }else{
+                console.log("no, constr was good");
+                questionGrade = questionGrade + newVal;
+                totalGrade = totalGrade + newVal;
+            }
+
+        }
+
+        var gradeChange = {'action':'gradeChange',
+                            'examName': gradeName,
+                            'qID': questionid,
+                            'qGrade': questionGrade,
+                            'autoGrade': totalGrade,
+                            'changeGrade': newVal,
+                            'changeType': box
+                            };
+
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success change grade"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of change grade");
+            console.log(response_json);
+            
+            var id = "x"+response_json.qID;
+            document.getElementById(id).innerHTML = "Points "+response_json.qGrade+"/25";
+            document.getElementById("totalGrade").innerHTML = "Final grade: "+response_json.autoGrade;
+            //console.log(gradeChange);
+            
+           
+        }
+    };
+        xhr.send(JSON.stringify(gradeChange));
+        console.log("outside of change grade")
+
+
+    }
+
+
+
+  function adjustTotal(changed, gr){
+
+        var changeNum = Number(document.getElementById(changed).value);
+        console.log(changeNum);
+        //var pid = "points"+changed.substring(1);
+        console.log(gr);
+        //var pNum = Number(document.getElementById(pid).childNodes[0].nodeValue);
+       // console.log(pNum);
+        var subs = gr - changeNum;
+        console.log(subs);
+
+        totalGrade = totalGrade - subs;
+    console.log(totalGrade);
+    document.getElementById("totalGrade").innerHTML = "Final grade: "+totalGrade;
+
+}
+
+function addComment(changed){
+
+    var text = document.getElementById(changed).value;
+    var qidnum = changed.substring(1);
+    if(comments.length == 0){
+        comments.push({'qID':qidnum,
+                            'comment':text});
+    }else{
+        for(var i =0; i<comments.length; i++ ){
+        
+        if(comments[i].qID == qidnum){
+            comments[i].comment = text;
+        }else{
+            comments.push({'qID':qidnum,
+                            'comment':text});
+        }
+    } 
+    }
+
+    console.log(comments);
+}
+
+
+    function submitFinalGrade(){
+
+/*
+        var inputs = document.getElementsByTagName("input");
+
+        for(var i =0; i<inputs.length; i+2){
+            var comArray = {'qID': inputs[i].id,
+                            'comment': inputs[i].value
+                            //'gradeUpdated':inputs[i+1].value
+                        };
+
+            comments.push(comArray);
+        }
+*/
+        var final = {'action':'teacherGrade',
+                    'examName':gradeName,
+                    'graded':'yes',  
+                     'comments': comments,
+                     'finalGrade':totalGrade
+                    };
+
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success submit final"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of submit final");
+            console.log(response_json);
+            
+            if(response_json.status == 'yes'){
+
+            var alert = document.getElementById("grSubmit");
+            alert.setAttribute("href","https://web.njit.edu/~ak983/instructor.html");
+            alert.innerHTML = "Grade was submitted.Go back to Home page."
+            }
+            
+            console.log(final);
+            
+           
+        }
+    };
+        xhr.send(JSON.stringify(final));
+        console.log("outside of submit final")
+ 
+    }
+
+</script>
+</html>
