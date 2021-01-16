@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" >
+    <title>Add question</title>
+</head>
+<body onload="filter();">
+    <div class="somebox_half"></div>
+    <div class="navBar">
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/instructor.html">Home</a></div>
+        <div style="float: left;"><h3 id="navBarTitle">Create Question:</h3></div>
+<!--     Filter widgets         ------->
+        <div>
+            <input type="text" onchange="filter();"  id="srch" style="float: left; width: 300px; margin-left: 400px;" placeholder="type to search question">
+            <select id="topicFilter" onchange="filter();" style="float: left; width: 170px; margin-left: 30px;">
+                <option value="allTop">All topics</option>
+                <option value="types">Types and Operators</option>
+                <option value="flow">Control Flow</option>
+                <option value="func">Functions </option>
+                <option value="lists">Lists and Tuples</option>
+                <option value="struct">Classes in Python</option>
+                <option value="io">Input and Output</option>
+                <option value="lib">Python Standard Library</option>
+            </select>
+            <select id="difFilter" onchange="filter();" style="float: left; width: 110px; margin-left: 30px;">
+                <option value="allDif">All Difficulty</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+<!--------->
+
+        <div style="float: right; margin-right: 20px;"><a href="https://web.njit.edu/~ak983/login.html">Log out</a></div>
+    </div>
+
+<div >
+<form id="question" class="examForm" method="POST" onsubmit="event.preventDefault();">
+    <h4 style="display: inline;">Write a function named </h4><input style="width: 50%;" type="text" placeholder="Function name" id="funcName" required>
+    <h4 style="display: inline;" >that takes the following arguments </h4><input style="width: 50%;" type="text" placeholder="Function arguments" id="funcArgs" required>
+    <h4 style="display: inline;">performs the following operations </h4><input style="width: 50%;" type="text" placeholder="Function operations" id="funcOper" required>
+    <h4 style="display: inline;">and returns the value.</h4>
+</br>
+<div class="line"></div>
+</br>   
+    <h3 style="color: #f3bdcf; display: inline;" for="topic">Select topic for the question</h3>
+    <select style="width: 50%;" id="topic"required >
+        <option value="types">Types, Operators and Expressions</option>
+        <option value="flow">Control Flow</option>
+        <option value="func">Functions and Program Structure</option>
+        <option value="lists">Lists and Tuples</option>
+        <option value="struct">Classes in Python</option>
+        <option value="io">Input and Output</option>
+        <option value="lib">Python Standard Library</option>
+    </select>
+</br>
+    <h3 style="color: #f3bdcf; display: inline;" for="difficulty">Select difficulty for the question</h3>
+    <select id="diff" style="width: 50%;" required>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+    </select>
+<br>
+    <h3 style="color: #f3bdcf; display: inline;" for="difficulty">Select constraint for the question</h3>
+    <select id="constraint" style="width: 50%;">
+        <option value="none">None</option>
+        <option value="print">Print</option>
+        <option value="For Loop">forloop</option>
+    </select>
+</br>
+
+</br>
+    <h3 style="color: #f3bdcf; display: inline;" for="case1"> Test cases for the question </h3>
+    <input style="width: 50%;" type="text" placeholder="Test case input" id="caseInput" required>
+    <input style="width: 50%;" type="text" placeholder="Test case output" id="caseOutput" required>
+    <button type="button" onclick="addTestCases();">Add test case</button>
+</br>
+    <span id="caseDisplay"></span>
+</br>
+    <button type="submit" id="addQuestion" onclick="addToBank();" >Add Question to bank</button>
+</form>
+</div>
+
+<div id="qBank" class="qBank">
+    <ul class="bankList" id="bankList">
+     <!--  <li id="someQ">
+            <h4>Write a function named DUMMY that takes the following arguments DUMMY performs the following operations DUMMY and returns the value.</h4>
+        </li> -->
+    </ul>
+
+</div>
+</body>
+<script>
+
+    var testInput = '';
+    var testOutput = '';
+
+    function populateBank(){
+        var action = {'action': 'populate'};
+        var i;
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success populate"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of populate");
+            console.log(response_json);
+            for(i=0; i<response_json.length; i++){
+            var ul = document.getElementById("bankList");
+            var li = document.createElement("li");
+            var h4 = document.createElement("h4");
+            h4.appendChild(document.createTextNode("Write a function named "+response_json[i].funcName+" that takes the following arguments "+response_json[i].funcArgs+" performs the following operations "+response_json[i].funcOper+" and returns the value."));
+            //addDivToQuestion(response_json.qID, li);
+            li.appendChild(h4);
+           ul.appendChild(li);
+            }
+            
+        }
+    };
+        xhr.send(JSON.stringify(action));
+        console.log("outside of populate");
+
+    }
+
+
+    //--------------filter -----------------------------------//
+
+    function filter(){
+        var srch = document.getElementById("srch").value;
+        var topFilt = document.getElementById("topicFilter").value;
+        var difFilt = document.getElementById("difFilter").value;
+
+        var filter = {'action': 'populate',
+                      'search': srch,
+                      'topicFilter': topFilt,
+                      'difFilter': difFilt
+                      };
+        
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success filter"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of filter");
+            console.log(response_json);
+
+            var ul = document.getElementById("bankList");
+    ////// clean up list before appending 
+
+            while (ul.firstChild) {
+                ul.removeChild(ul.lastChild);
+            } 
+    //-----------------------------------                 
+            for(i=0; i<response_json.length; i++){
+            
+            var li = document.createElement("li");
+            var h4 = document.createElement("h4");
+            h4.appendChild(document.createTextNode("Write a function named "+response_json[i].funcName+" that takes the following arguments "+response_json[i].funcArgs+" performs the following operations "+response_json[i].funcOper+" and returns the value."));
+            li.appendChild(h4);
+            ul.appendChild(li);
+            }
+            
+        }
+    };
+        xhr.send(JSON.stringify(filter));
+        console.log("outside of filter");
+
+        
+    }
+    //-------------------------------------------------//
+
+    function addToBank(){
+    
+        var question = {
+            'action': 'add',
+            'funcName': document.getElementById("funcName").value,
+            'funcArgs': document.getElementById("funcArgs").value,
+            'funcOper': document.getElementById("funcOper").value,
+            'funcTopic': document.getElementById("topic").value,
+            'funcDiff': document.getElementById("diff").value,
+            'funcConst': document.getElementById("constraint").value,
+            'testcase_inputs': encodeURIComponent(testInput),
+            'testcase_outputs': encodeURIComponent(testOutput)
+            
+        };
+
+        var xhr = new XMLHttpRequest();
+    
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success add"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside add");
+            console.log(response_json);
+            var ul = document.getElementById("bankList");
+            var li = document.createElement("li");
+            var h4 = document.createElement("h4");
+            h4.appendChild(document.createTextNode("Write a function named "+response_json.funcName+" that takes the following arguments "+response_json.funcArgs+
+            " performs the following operations "+response_json.funcOper+" and returns the value. "));
+            //+"diff is "+response_json.funcDiff+
+          // " topic is "+response_json.funcTopic+" test case input "+response_json.testcase_inputs+" case output "+response_json.testcase_outputs));
+          //  li.appendChild(document.createTextNode("Input array: "+response_json.testcase_inputs+" "+"Output array: "+response_json.testcase_outputs+" first input was "+response_json.firstInput));
+           li.appendChild(h4);
+          ul.appendChild(li);
+
+
+            testInput = "";
+            testOutput = "";
+            resetForm();
+        }
+    };
+        xhr.send(JSON.stringify(question));
+        console.log("outside add");
+    }
+
+    function addTestCases(){
+        var input = document.getElementById("caseInput").value;
+        var output = document.getElementById("caseOutput").value;
+
+        //testInput.push(input);
+        //testOutput.push(output);
+        
+         if(testInput == ""){
+            testInput = testInput+input;
+        }else{
+            testInput = testInput+"~"+input;
+        }
+
+        if(testOutput == ""){
+            testOutput = testOutput+output;
+        }else{
+            testOutput = testOutput+"~"+output;
+        }
+        
+
+        console.log(testInput);
+        console.log(testOutput);
+
+        var stringText = "";
+
+       // for(var i = 0; i<testInput.length; i++){
+            stringText = stringText+testInput[i]+"->"+testOutput[i]+"   ";
+       // }
+
+        document.getElementById("caseDisplay").innerHTML = stringText;
+
+        document.getElementById("caseInput").value = "";
+        document.getElementById("caseOutput").value = "";
+    }
+
+    function resetForm() {
+    document.getElementById("question").reset();
+}
+
+</script>
+</html>
