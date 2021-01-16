@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" >
+    <title>Create Exam</title>
+</head>
+<body onload="filter();">
+    <div class="somebox_half"></div>
+    <div class="navBar">
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/instructor.html">Home</a></div>
+        <div style="float: left;"><h3>Create Exam:</h3></div>
+
+<!--     Filter widgets         ------->
+        <div>
+            <input type="text" placeholder="Type to search question" id="srch" style="float: left; width: 300px; margin-left: 400px;">
+            <select id="topicFilter" style="float: left; width: 200px; margin-left: 50px;">
+                <option value="allTop">All topics</option>
+                <option value="types">Types and Operators</option>
+                <option value="flow">Control Flow</option>
+                <option value="func">Functions and Program Structure</option>
+                <option value="lists">Lists and Tuples</option>
+                <option value="struct">Classes in Python</option>
+                <option value="io">Input and Output</option>
+                <option value="lib">Python Standard Library</option>
+            </select>
+            <select id="difFilter" style="float: left; width: 100px; margin-left: 50px;">
+                <option value="allDif">All Difficulty</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+<!--------->
+        <div style="float: right; margin-right: 20px;"><a href="https://web.njit.edu/~ak983/login.html">Log out</a></div>
+    </div>
+    <div >
+        <form id="exam" class="examForm" method="POST" onsubmit="event.preventDefault();">
+
+            <input type="text" placeholder="Enter name for this exam" id="examName" required>
+            <h3 style="color: #f3bdcf; text-align: center;" for="case1">Select questions from question bank</h3>
+            <div id="qAdded"></div>
+            <button type="submit" id="publishExam" onclick="makeExam();">Publish Exam</button>
+
+            <div id="underForm">
+                <span id="publish_alert" style="color: teal;"></span>
+                <span id="publish_total" style="color: rgb(3, 97, 97);"></span>
+            </div>
+        </form>
+    </div>
+    
+    <div id="qBank" class="qBank">
+        <ul class="bankList" id="bankList">
+           <!-- <li id="someQ">
+                <h4>Write a function named DUMMY that takes the following arguments DUMMY performs the following operations DUMMY and returns the value.</h4>
+                <div id="qNum">
+                <input style=" width: 50%;" type="text" placeholder="Enter points for this question"> 
+                <button type="button">Add</button>
+                </div>
+            </li> -->
+        </ul>
+
+    </div>
+    
+</body>
+<script>
+
+    var questionSet = [];
+    var pointsOfquestions = [];
+   // var constraints = [];
+    var totalPoints = 0;
+
+//--------------filter -----------------------------------//
+
+function filter(){
+
+    
+        var srch = document.getElementById("srch").value;
+        var topFilt = document.getElementById("topicFilter").value;
+        var difFilt = document.getElementById("difFilter").value;
+
+        var filter = {'action': 'populate',
+                      'search': srch,
+                      'topicFilter': topFilt,
+                      'difFilter': difFilt
+                      };
+        
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success filter"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of filter");
+            console.log(response_json);
+
+            var ul = document.getElementById("bankList");
+    ////// clean up list before appending 
+
+            while (ul.firstChild) {
+                ul.removeChild(ul.lastChild);
+            } 
+    //-----------------------------------                 
+            for(i=0; i<response_json.length; i++){
+            
+            var li = document.createElement("li");
+            var h4 = document.createElement("h4");
+            h4.appendChild(document.createTextNode("Write a function named "+response_json[i].funcName+" that takes the following arguments "+response_json[i].funcArgs+" performs the following operations "+response_json[i].funcOper+" and returns the value."));
+            li.appendChild(h4);
+            addDivToQuestion(response_json[i].qID, li);
+            ul.appendChild(li);
+            }
+            
+        }
+    };
+        xhr.send(JSON.stringify(filter));
+        console.log("outside of filter");
+
+        
+    }
+    //-------------------------------------------------//
+
+
+    function makeExam(){
+        var examform = document.getElementById("exam");
+        var formInputs = examform.getElementsByTagName("input");
+       
+        var num;
+        for(var i =1; i<formInputs.length; i++){
+           pointsOfquestions.push(formInputs[i].value); 
+           num = Number(formInputs[i].value);
+           totalPoints = totalPoints + num;
+          
+        }
+
+
+
+        var examName = document.getElementById("examName").value;
+
+        var exam = {
+            'action':'newExam',
+            'examName' : examName,
+            'completed': 'no',
+            'auto_graded': 'no',
+            'graded':'no',
+            'qSet' : questionSet,
+            'pSet' : pointsOfquestions
+        }
+
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success make exam"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of make exam");
+            console.log(response_json);
+            
+            document.getElementById("publish_alert").innerHTML = "Exam "+response_json.examName + " was successfully published!";
+            document.getElementById("publish_total").innerHTML = "Total points are "+totalPoints;
+
+            console.log(questionSet);
+            console.log(pointsOfquestions);
+            //console.log(constraints);
+
+            var div = document.getElementById("underForm");
+            var vewExamButton = document.createElement("a");
+            vewExamButton.setAttribute("style","button");
+            vewExamButton.setAttribute("href","https://web.njit.edu/~ak983/examListInstructor.html");
+            vewExamButton.appendChild(document.createTextNode("View exams"));
+            div.appendChild(vewExamButton);
+        }
+    };
+        xhr.send(JSON.stringify(exam));
+        console.log("outside of make exam ");
+
+
+    }
+
+    function addToExamNew(clicked){
+        
+        // ------ creating fields -----------
+        var div = document.createElement("div");
+       // var cons = document.createElement("p");
+       // cons.style.float = "left";
+       // cons.appendChild(document.createTextNode("Constraint:"));
+        var exambanner = document.getElementById("qAdded");
+        var thebutton = document.getElementById(clicked);
+
+        var qst = document.createElement("h4");
+        qst.appendChild(document.createTextNode(thebutton.parentElement.childNodes[0].childNodes[0].nodeValue));
+
+        var input = document.createElement("input");
+        input.style.width = "30%";
+        input.style.float = "left";
+        input.setAttribute("type", "text");
+        input.setAttribute("placeholder","Enter points for question");
+        
+        div.appendChild(input);
+      ;
+        qst.appendChild(div);
+        exambanner.appendChild(qst);
+        exambanner.appendChild(document.createElement("br"));
+
+        //------ add to array of question ids ----//
+
+        questionSet.push(clicked);
+
+
+    }
+
+  
+    function addDivToQuestion(qID, li){
+
+        var inputID = "input"+qID;
+        var butID = qID;
+      
+        var button = document.createElement("button");
+    
+        button.setAttribute("id", butID);
+        button.setAttribute("type","button");
+        button.setAttribute("onclick", "addToExamNew(this.id);");
+        button.appendChild(document.createTextNode("Add"));
+        li.appendChild(button);
+
+        }
+
+
+</script>
+</html>
