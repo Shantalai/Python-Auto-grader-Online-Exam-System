@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" >
+    <title>Graded exam</title>
+</head>
+<body onload="showGrade();">
+    <div class="somebox_right"></div>
+    <div class="somebox_left"></div>
+    <div class="navBar">
+        <div style="float: left; margin-right: 60px;"><a href="https://web.njit.edu/~ak983/examListStudent.html">Home</a></div>
+        <div style="float: left;"><h3 id="navBarTitle">Your final grade</h3></div>
+        <div style="float: right; margin-right: 20px;"><a href="https://web.njit.edu/~ak983/login.html">Log out</a></div>
+    </div>
+
+    <table id="finalTable" >
+        <tr>
+            <th>
+                <h3 id="gradeDisplay">Your Final grade: X</h3>
+            </th>
+        </tr>
+    <!--    <tr>
+         <td>
+
+
+            <h4 id="autoQT">Text of the question Text of the question Text of the question Text of the question Text of the question</h4>
+           <h3 id="autoP">Points / Total</h3>
+        <table>
+            <tr>
+                <th>Grade item</th>
+                <th>Student input</th>
+                <th>Check</th>
+                <th>Points off</th>
+            </tr>
+            <tr>
+                <td>Function name</td>
+                <td>DoubleIt</td>
+                <td>Fail</td>
+                <td>-5</td>
+            </tr>
+            <tr>
+                <td>Test case 1 DoubleIt(4)->5</td>
+                <td>10</td>
+                <td>Fail</td>
+                <td>-4</td>
+            </tr>
+        </table> 
+        <table>
+            <th>Teachers comment:</th>
+            <th>Good job, but python does not use semicolon.</th>
+        </table>
+    
+
+
+            </td> 
+        </tr> -->
+    </table>
+</body>
+
+<script>
+
+    var gradeExamName = localStorage.getItem('examToSee');    
+    var studentID = localStorage.getItem('thisStudent');
+   //var studentID = "temp id";
+
+    function showGrade(){
+
+        var pullFinal = {'action': 'pullFinal',
+                         'examName': gradeExamName
+                        };
+
+        var examTitle = document.getElementById('navBarTitle');
+
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "return.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200 ){
+             // checks if status success
+            console.log("status success pull final"); 
+            var response_json = JSON.parse(xhr.responseText);
+            console.log("iiinnutside of pull final");
+            console.log(response_json);
+            //examTitle.innerHTML = "Exam "+response_json.examName+" student ID "+studentID; 
+            examTitle.innerHTML = "Exam "+gradeExamName+" student ID "+studentID; 
+            
+            function makePass(){
+                var pass = document.createElement("h4");
+                pass.style.color = "green";
+                pass.appendChild(document.createTextNode("PASS"));
+
+                return pass;
+            }
+
+            function makeFail(){
+                var fail = document.createElement("h4");
+                fail.style.color = "red";
+                fail.appendChild(document.createTextNode("FAIL"));
+
+                return fail;
+            }
+
+            var maintable = document.getElementById("finalTable");
+            document.getElementById("gradeDisplay").innerHTML = "Your final grade is "+response_json.finalGrade;
+            for(i=0; i<response_json.questions.length; i++){
+
+            var outtr = document.createElement("tr");
+            var outtd = document.createElement("td");
+            var qText = document.createElement("h4");
+            qText.appendChild(document.createTextNode("Write a function named "+response_json.questions[i].funcName+" that takes the following arguments "+response_json.questions[i].funcArgs+" performs the following operations "+response_json.questions[i].funcOper+"."));
+            var points = document.createElement("h3");
+            points.appendChild(document.createTextNode("Points: "+response_json.questions[i].qGrade+"/"+response_json.questions[i].qPoints));
+
+            var table = document.createElement("table");
+           
+
+            var tr1 = document.createElement("tr");
+            var th1 = document.createElement("th");
+            var th2 = document.createElement("th");
+            var th3 = document.createElement("th");
+            var th4 = document.createElement("th");
+            var th5 = document.createElement("th");
+            th1.setAttribute("style","border: 1px solid black;");
+            th2.setAttribute("style","border: 1px solid black;");
+            th3.setAttribute("style","border: 1px solid black;");
+            th4.setAttribute("style","border: 1px solid black;");
+            th5.setAttribute("style","border: 1px solid black;");
+
+            th1.appendChild(document.createTextNode("Grade Item"));
+            th2.appendChild(document.createTextNode("Student output"));
+            th3.appendChild(document.createTextNode("Check"));
+            th4.appendChild(document.createTextNode("Points off"));
+            th5.appendChild(document.createTextNode("Changed points"));
+           
+            tr1.appendChild(th1);
+            tr1.appendChild(th2);
+            tr1.appendChild(th3);
+            tr1.appendChild(th4);
+            tr1.appendChild(th5);
+            // --------------------------------------------------//
+            table.appendChild(tr1);
+            //function name dispalay------------------------///
+            var trFuncName = document.createElement("tr");
+            var tdFN1 = document.createElement("td");
+            var tdFN2 = document.createElement("td");
+            var tdFN3 = document.createElement("td");
+            var tdFN4 = document.createElement("td");
+            var tdFN5 = document.createElement("td");
+
+            tdFN1.setAttribute("style","border: 1px solid black;");
+            tdFN2.setAttribute("style","border: 1px solid black;");
+            tdFN3.setAttribute("style","border: 1px solid black;");
+            tdFN4.setAttribute("style","border: 1px solid black;");
+            tdFN5.setAttribute("style","border: 1px solid black;");
+
+            if(response_json.questions[i].nameFlag == "yes"){
+                tdFN1.appendChild(document.createTextNode("Wrong function name used"));
+                tdFN2.appendChild(document.createTextNode(response_json.questions[i].wrongFuncName));
+                tdFN3.appendChild(makeFail());
+                tdFN4.appendChild(document.createTextNode("-5"));
+            }else{
+                tdFN1.appendChild(document.createTextNode("Function name is correct"));
+                tdFN2.appendChild(document.createTextNode(response_json.questions[i].funcName));
+                tdFN3.appendChild(makePass());
+                tdFN4.appendChild(document.createTextNode(""));
+            }
+
+            if(response_json.questions[i].changeType == "fn"){
+                tdFN5.appendChild(document.createTextNode(response_json.questions[i].changeGrade));
+            }else{
+                tdFN5.appendChild(document.createTextNode(""));
+            }
+
+
+            trFuncName.appendChild(tdFN1);
+            trFuncName.appendChild(tdFN2);
+            trFuncName.appendChild(tdFN3);
+            trFuncName.appendChild(tdFN4);
+            trFuncName.appendChild(tdFN5);
+           //--------------------------------------------//
+           table.appendChild(trFuncName);
+           // cases dispalay --------------------------------------///
+
+           for( var j =0; j<response_json.questions[i].testcase_flags.length; j++){
+                var trCase = document.createElement("tr");
+                var tdCS1 = document.createElement("td");
+                var tdCS2 = document.createElement("td");
+                var tdCS3 = document.createElement("td");
+                var tdCS4 = document.createElement("td");
+                var tdCS5 = document.createElement("td");
+
+                tdCS1.setAttribute("style","border: 1px solid black;");
+                tdCS2.setAttribute("style","border: 1px solid black;");
+                tdCS3.setAttribute("style","border: 1px solid black;");
+                tdCS4.setAttribute("style","border: 1px solid black;");
+                tdCS5.setAttribute("style","border: 1px solid black;");
+
+                tdCS1.appendChild(document.createTextNode("Test case "+(j+1)+" "+response_json.questions[i].funcName+"("+response_json.questions[i].testcase_inputs[j]+")->"+response_json.questions[i].testcase_outputs[j]));
+                if(response_json.questions[i].testcase_flags[j]=="yes"){
+                    tdCS2.appendChild(document.createTextNode(response_json.questions[i].wrongTestCaseOutputs[j]));
+                    tdCS3.appendChild(makeFail());
+                    tdCS4.appendChild(document.createTextNode("-4"));
+                }else{
+                    tdCS2.appendChild(document.createTextNode(response_json.questions[i].wrongTestCaseOutputs[j]));
+                    tdCS3.appendChild(makePass());
+                    tdCS4.appendChild(document.createTextNode(""));
+                }
+
+                if(response_json.questions[i].changeType == /t[0-3]/ && j == response_json.questions[i].changeType.substring(1) ){
+                    tdCS5.appendChild(document.createTextNode(response_json.questions[i].changeGrade));
+                }
+                else{
+                    tdCS5.appendChild(document.createTextNode(""));
+                }
+
+                trCase.appendChild(tdCS1);
+                trCase.appendChild(tdCS2);
+                trCase.appendChild(tdCS3);
+                trCase.appendChild(tdCS4);
+                trCase.appendChild(tdCS5);
+                
+
+                table.appendChild(trCase);
+           }
+            // --------------------------------------------------------------------//
+
+            //-- semicolon display -----------------------------------//
+            if(response_json.questions[i].semicolonFlag == "yes"){
+                var trSemi = document.createElement("tr");
+                var tdSM1 = document.createElement("td");
+                var tdSM2 = document.createElement("td");
+                var tdSM3 = document.createElement("td");
+                var tdSM4 = document.createElement("td");
+                var tdSM5 = document.createElement("td");
+                tdSM1.setAttribute("style","border: 1px solid black;");
+                tdSM2.setAttribute("style","border: 1px solid black;");
+                tdSM3.setAttribute("style","border: 1px solid black;");
+                tdSM4.setAttribute("style","border: 1px solid black;");
+                tdSM5.setAttribute("style","border: 1px solid black;");
+
+                tdSM1.appendChild(document.createTextNode('Missing ":"  in your answer'));
+                tdSM2.appendChild(document.createTextNode(""));
+                tdSM3.appendChild(makeFail());
+                tdSM4.appendChild(document.createTextNode("-2"));
+
+                if(response_json.questions[i].changeType == "co"){
+                tdSM5.appendChild(document.createTextNode(response_json.questions[i].changeGrade));
+                }else{
+                tdSM5.appendChild(document.createTextNode(""));
+                    }  
+
+
+                trSemi.appendChild(tdSM1);
+                trSemi.appendChild(tdSM2);
+                trSemi.appendChild(tdSM3);
+                trSemi.appendChild(tdSM4);
+                trSemi.appendChild(tdSM5);
+
+                table.appendChild(trSemi);
+                
+            }
+
+            //--------------------------------------------------------------//
+
+            //---------- constraint dispalay -------------------------------//
+            if(response_json.questions[i].constraintFlag == "yes"){
+
+                var trConst = document.createElement("tr");
+                var tdCT1 = document.createElement("td");
+                var tdCT2 = document.createElement("td");
+                var tdCT3 = document.createElement("td");
+                var tdCT4 = document.createElement("td");
+                var tdCT5 = document.createElement("td");
+                tdCT1.setAttribute("style","border: 1px solid black;");
+                tdCT2.setAttribute("style","border: 1px solid black;");
+                tdCT3.setAttribute("style","border: 1px solid black;");
+                tdCT4.setAttribute("style","border: 1px solid black;");
+                tdCT5.setAttribute("style","border: 1px solid black;");
+
+                tdCT1.appendChild(document.createTextNode("Did not use constraint: "+response_json.questions[i].funcConst));
+                tdCT2.appendChild(document.createTextNode(""));
+                tdCT3.appendChild(makeFail());
+                tdCT4.appendChild(document.createTextNode("-3"));
+
+                if(response_json.questions[i].changeType == "cn"){
+                tdCT5.appendChild(document.createTextNode(response_json.questions[i].changeGrade));
+                }else{
+                tdCT5.appendChild(document.createTextNode(""));
+                    }  
+
+                trConst.appendChild(tdCT1);
+                trConst.appendChild(tdCT2);
+                trConst.appendChild(tdCT3);
+                trConst.appendChild(tdCT4);
+                trConst.appendChild(tdCT5);
+
+                table.appendChild(trConst);
+            }
+            //----------------------------------------------------------------//
+
+            //-----------------teacher comments -----------------------//
+
+            var comTable = document.createElement("table");
+            var thT1 = document.createElement("th");
+            var thT2 = document.createElement("th");
+           
+            thT1.appendChild(document.createTextNode("Teacher's comment: "));
+            thT2.appendChild(document.createTextNode(response_json.questions[i].comment));
+
+            comTable.appendChild(thT1);
+            comTable.appendChild(thT2);
+            //----------------------------------------------------------//
+
+            outtd.appendChild(qText);
+            outtd.appendChild(points);
+            outtd.appendChild(table);
+            outtd.appendChild(comTable);
+            outtr.appendChild(outtd);
+            maintable.appendChild(outtr);
+
+            }// for every question
+            
+        }
+    };
+        xhr.send(JSON.stringify(pullFinal));
+        console.log("outside of pull final");
+
+    }
+   
+
+</script>
+</html>
